@@ -1,8 +1,32 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
+
+class NearestNeighbor(object):
+    def __init__(self):
+        pass
+
+    def train(self, X, y):
+        """ X is N x D where each row is an example. Y is 1-dimension of size N """
+        # The nearest neighbor classifier simply remembers all the training data
+        self.Xtr = X
+        self.ytr = y
+
+    def predict(self, X):
+        """ X is N x D where each row is an example we wish to predict label for """
+        num_test = X.shape[0]
+        # Let's make sure that the output type matches the input type
+        Ypred = np.zeros(num_test, dtype=self.ytr.dtype)
+
+        # Loop over all test rows
+        for i in range(num_test):
+            # Find the nearest training image to the i'th test image
+            # Using the L2 distance (Euclidean distance)
+            distances = np.sqrt(np.sum(np.square(self.Xtr - X[i, :]), axis=1))
+            min_index = np.argmin(distances)  # Get the index with the smallest distance
+            Ypred[i] = self.ytr[min_index]  # Predict the label of the nearest example
+
+        return Ypred
 
 def load_CIFAR10(data_path):
     """
@@ -39,14 +63,14 @@ print('Ytr shape:', Ytr.shape)
 print('Xte_rows shape:', Xte_rows.shape)
 print('Yte shape:', Yte.shape)
 
-# Create a k-Nearest Neighbors classifier
-knn = KNeighborsClassifier(n_neighbors=5)
+# Create a Nearest Neighbor classifier class
+nn = NearestNeighbor()
 
 # Train the classifier on the training images and labels
-knn.fit(Xtr_rows, Ytr)
+nn.train(Xtr_rows, Ytr)
 
 # Predict labels on the test images
-Yte_predict = knn.predict(Xte_rows[:10, :])  # Predict for the first 10 test examples
+Yte_predict = nn.predict(Xte_rows[:10, :])  # Predict for the first 10 test examples
 
 # Display the images and predictions
 num_rows_to_show = 3
@@ -64,5 +88,5 @@ for i in range(10):
 plt.show()
 
 # Print the classification accuracy
-accuracy = accuracy_score(Yte[:10], Yte_predict)  # Accuracy for the first 10 test examples
+accuracy = np.mean(Yte_predict == Yte[:10])  # Accuracy for the first 10 test examples
 print('Accuracy:', accuracy)
